@@ -1,0 +1,419 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Find My Car | Smart Parking</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f1f5f9;
+  color: #172033;
+}
+
+header {
+  background: #102a43;
+  color: white;
+  padding: 24px 6%;
+}
+
+header h1 { font-size: 28px; }
+header p { margin-top: 8px; color: #cbd5e1; }
+
+nav {
+  background: #164e63;
+  padding: 13px 6%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+  padding: 24px 16px;
+}
+
+.welcome {
+  background: linear-gradient(120deg, #0f766e, #2563eb);
+  color: white;
+  padding: 28px;
+  border-radius: 16px;
+  margin-bottom: 22px;
+}
+
+.welcome p { margin-top: 10px; }
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.stat, .panel {
+  background: white;
+  padding: 22px;
+  border-radius: 12px;
+  box-shadow: 0 3px 12px #0000000c;
+}
+
+.stat h3 { color: #64748b; font-size: 15px; }
+.stat p { font-size: 30px; font-weight: bold; margin-top: 12px; }
+
+section { margin-bottom: 28px; }
+h2 { margin-bottom: 16px; color: #102a43; }
+
+.slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.slot {
+  padding: 22px 12px;
+  text-align: center;
+  border-radius: 12px;
+  color: #14532d;
+  background: #dcfce7;
+  border: 2px solid #86efac;
+}
+
+.slot.occupied {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+
+.slot h3 { font-size: 24px; margin-bottom: 12px; }
+.slot p { font-weight: bold; margin-bottom: 14px; }
+
+button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 7px;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+button:hover { opacity: 0.88; }
+.slot button { margin-top: 5px; }
+.slot.occupied button { background: #b91c1c; }
+
+input, select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  margin: 10px 0 14px;
+  font-size: 15px;
+}
+
+.search-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.search-row input { flex: 1; min-width: 180px; }
+.search-row button { margin: 10px 0 14px; }
+
+.message {
+  margin-top: 14px;
+  padding: 12px;
+  background: #eff6ff;
+  border-radius: 8px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.status-note {
+  color: #64748b;
+  font-size: 13px;
+  margin-top: 12px;
+  line-height: 1.5;
+}
+
+footer {
+  background: #102a43;
+  color: white;
+  text-align: center;
+  padding: 22px;
+}
+
+@media (max-width: 500px) {
+  header h1 { font-size: 23px; }
+  .welcome { padding: 20px; }
+  .stat, .panel { padding: 17px; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🚗 Find My Car</h1>
+  <p>Smart Parking Management System</p>
+</header>
+
+<nav>
+  <a href="#dashboard">Dashboard</a>
+  <a href="#parking">Parking Slots</a>
+  <a href="#findcar">Find My Car</a>
+  <a href="#booking">Book Parking</a>
+  <a href="#activity">Activity</a>
+</nav>
+
+<main class="container">
+
+  <div class="welcome">
+    <h2 style="color:white">Welcome to Smart Parking!</h2>
+    <p>Check parking availability, find your car and try a demo booking.</p>
+  </div>
+
+  <section id="dashboard">
+    <h2>📊 Parking Dashboard</h2>
+    <div class="stats">
+      <div class="stat">
+        <h3>Total Slots</h3>
+        <p id="total">4</p>
+      </div>
+      <div class="stat">
+        <h3>Available Slots</h3>
+        <p id="available">3</p>
+      </div>
+      <div class="stat">
+        <h3>Occupied Slots</h3>
+        <p id="occupied">1</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="parking">
+    <h2>🅿️ Parking Slot Status</h2>
+    <div class="slots" id="slots"></div>
+    <p class="status-note">
+      Demo mode: Use the buttons to simulate parking status.
+      Real sensor status requires ESP32 integration.
+    </p>
+  </section>
+
+  <section id="findcar">
+    <div class="panel">
+      <h2>🔍 Find My Car</h2>
+      <p>Enter your vehicle number to find its parking slot.</p>
+
+      <div class="search-row">
+        <input id="vehicleNumber"
+          placeholder="Example: TN38AB1234">
+        <button onclick="findCar()">Search Car</button>
+      </div>
+
+      <div id="searchResult" class="message" hidden></div>
+    </div>
+  </section>
+
+  <section id="booking">
+    <div class="panel">
+      <h2>📝 Book Parking (Demo)</h2>
+
+      <form id="bookingForm">
+        <label for="bookingVehicle">Vehicle Number</label>
+        <input id="bookingVehicle" required
+          placeholder="Enter vehicle number">
+
+        <label for="bookingSlot">Select Parking Slot</label>
+        <select id="bookingSlot" required>
+          <option value="">Choose an available slot</option>
+        </select>
+
+        <button type="submit">Book Slot</button>
+      </form>
+
+      <div id="bookingResult" class="message" hidden></div>
+      <p class="status-note">
+        This demo booking is stored only in this page session.
+        It is not a real reservation.
+      </p>
+    </div>
+  </section>
+
+  <section id="activity">
+    <div class="panel">
+      <h2>📋 Recent Activity</h2>
+      <div id="activityList">No new activity yet.</div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p>Find My Car Smart Parking System</p>
+  <p style="margin-top:8px">Student Project | Demo Version</p>
+</footer>
+
+<script>
+const vehicles = {
+  "TN38AB1234": { slot: "A2", time: "10:32 AM" },
+  "TN37CD5678": { slot: "A1", time: "10:45 AM" },
+  "TN40EF9012": { slot: "A3", time: "11:00 AM" }
+};
+
+const parkingSlots = [
+  { id: "A1", occupied: true },
+  { id: "A2", occupied: false },
+  { id: "A3", occupied: false },
+  { id: "A4", occupied: false }
+];
+
+const activity = [];
+
+function updateDashboard() {
+  const available = parkingSlots.filter(s => !s.occupied).length;
+  document.getElementById("total").textContent = parkingSlots.length;
+  document.getElementById("available").textContent = available;
+  document.getElementById("occupied").textContent =
+    parkingSlots.length - available;
+}
+
+function renderSlots() {
+  const container = document.getElementById("slots");
+  container.innerHTML = "";
+
+  parkingSlots.forEach(slot => {
+    const card = document.createElement("div");
+    card.className = "slot" + (slot.occupied ? " occupied" : "");
+
+    const title = document.createElement("h3");
+    title.textContent = slot.id;
+
+    const status = document.createElement("p");
+    status.textContent = slot.occupied ? "🔴 Occupied" : "🟢 Available";
+
+    const button = document.createElement("button");
+    button.textContent = slot.occupied ? "Mark Available" : "Simulate Car";
+    button.onclick = () => toggleSlot(slot.id);
+
+    card.append(title, status, button);
+    container.appendChild(card);
+  });
+
+  updateDashboard();
+  updateBookingOptions();
+}
+
+function updateBookingOptions() {
+  const select = document.getElementById("bookingSlot");
+  const oldValue = select.value;
+  select.innerHTML = '<option value="">Choose an available slot</option>';
+
+  parkingSlots.filter(s => !s.occupied).forEach(slot => {
+    const option = document.createElement("option");
+    option.value = slot.id;
+    option.textContent = slot.id + " - Available";
+    select.appendChild(option);
+  });
+
+  if ([...select.options].some(o => o.value === oldValue)) {
+    select.value = oldValue;
+  }
+}
+
+function addActivity(message) {
+  const now = new Date().toLocaleTimeString();
+  activity.unshift(now + " — " + message);
+  activity.splice(8);
+
+  const list = document.getElementById("activityList");
+  list.innerHTML = "";
+
+  activity.forEach(item => {
+    const p = document.createElement("p");
+    p.textContent = "• " + item;
+    p.style.marginBottom = "10px";
+    list.appendChild(p);
+  });
+}
+
+function toggleSlot(id) {
+  const slot = parkingSlots.find(s => s.id === id);
+  slot.occupied = !slot.occupied;
+
+  renderSlots();
+  addActivity(id + (slot.occupied ? " marked occupied (demo)" :
+    " marked available (demo)"));
+}
+
+function findCar() {
+  const number = document.getElementById("vehicleNumber")
+    .value.trim().toUpperCase();
+
+  const result = document.getElementById("searchResult");
+  result.hidden = false;
+
+  if (!number) {
+    result.textContent = "Please enter a vehicle number.";
+    return;
+  }
+
+  if (vehicles[number]) {
+    const car = vehicles[number];
+    result.textContent = "Vehicle: " + number +
+      " | Parking Slot: " + car.slot +
+      " | Demo Entry Time: " + car.time;
+    addActivity("Vehicle search: " + number);
+  } else {
+    result.textContent =
+      "Vehicle not found in demo records. Try TN38AB1234, TN37CD5678 or TN40EF9012.";
+  }
+}
+
+document.getElementById("bookingForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  const number = document.getElementById("bookingVehicle")
+    .value.trim().toUpperCase();
+  const id = document.getElementById("bookingSlot").value;
+  const result = document.getElementById("bookingResult");
+  result.hidden = false;
+
+  const slot = parkingSlots.find(s => s.id === id);
+
+  if (!slot || slot.occupied) {
+    result.textContent = "That slot is no longer available. Please choose another.";
+    updateBookingOptions();
+    return;
+  }
+
+  slot.occupied = true;
+  vehicles[number] = { slot: id, time: new Date().toLocaleTimeString() };
+
+  result.textContent = "Demo booking successful! Vehicle " +
+    number + " is assigned to slot " + id + ".";
+
+  addActivity("Demo booking: " + number + " → " + id);
+  renderSlots();
+  this.reset();
+});
+
+renderSlots();
+</script>
+
+</body>
+</html>
